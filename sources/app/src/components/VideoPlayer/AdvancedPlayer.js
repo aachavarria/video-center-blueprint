@@ -158,7 +158,7 @@ export default function () {
             </div>
           </div>
           <div className={classes.tabPanel} hidden={tab !== 2}>
-            <StreamListFetcherVideoJSAdapter id={id} />
+            <StreamListFetcherVideoJSAdapter id={id} onStreamSelected={(value) => setSrc(value)} />
           </div>
           <div className={classes.tabPanel} hidden={tab !== 3}>
             <Transcript />
@@ -173,7 +173,6 @@ export default function () {
       </div>
       <AdvancedControlsBarAdapter
         id={id}
-        src={src}
         skip={context.skip}
         volume={volume}
         setVolume={setVolume}

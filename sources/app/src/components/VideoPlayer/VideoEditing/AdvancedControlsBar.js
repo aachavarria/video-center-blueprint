@@ -77,6 +77,7 @@ export function AdvancedControlsBar(props) {
     onBackToSimpleMenu,
     isRecording = false,
     isPlaying,
+    isLive,
     isClipping = false,
     volume = 60,
     playbackSpeed = SPEEDS[2],
@@ -97,7 +98,7 @@ export function AdvancedControlsBar(props) {
           <Slider
             min={0}
             step={1}
-            max={duration}
+            max={isLive ? time : duration}
             value={time}
             valueLabelDisplay="auto"
             ValueLabelComponent={SliderValueLabel}
@@ -108,6 +109,7 @@ export function AdvancedControlsBar(props) {
             <PhotoCameraRoundedIcon />
           </IconButton>
           <IconButton
+            disabled={isLive}
             aria-label="Record"
             className={isRecording ? classes.recordingActive : null}
             onClick={onRecord}
@@ -115,7 +117,7 @@ export function AdvancedControlsBar(props) {
             <FiberManualRecordRoundedIcon />
           </IconButton>
           <IconButton
-            disabled={isClipping}
+            disabled={isClipping || isLive}
             aria-label="Clip"
             onClick={() => {
               onPause();
@@ -128,6 +130,7 @@ export function AdvancedControlsBar(props) {
             <LocalOfferOutlinedIcon />
           </IconButton>
           <BasicControls
+            isLive={isLive}
             onSkipBack={onSkipBack}
             onTogglePlay={onTogglePlay}
             isPlaying={isPlaying}
@@ -199,6 +202,7 @@ export function AdvancedControlsBarAdapter(props) {
   const { skip, volume, setVolume, onClip } = props;
   const player = usePlayer(props.id);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLive, setIsLive] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [duration, setDuration] = useState(null);
   const [time, setTime] = useState(null);
@@ -212,6 +216,10 @@ export function AdvancedControlsBarAdapter(props) {
       });
 
       player().on('loadedmetadata', () => {
+        const _duration = player().duration();
+        if (_duration === Infinity) {
+          setIsLive(true);
+        }
         setDuration(player().duration());
       });
 
@@ -271,6 +279,7 @@ export function AdvancedControlsBarAdapter(props) {
         onSkipForward={() => seek(skip)}
         onSkipBack={() => seek(-skip)}
         isPlaying={isPlaying}
+        isLive={isLive}
         onPause={onPause}
         onTogglePlay={onTogglePlay}
         onFullScreen={onFullScreen}

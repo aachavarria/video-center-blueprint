@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import VideoDurationControl from './VideoDurationControl';
 import BoundsControl from './BoundsControl';
 import PlayBackTimeControl from './PlayBackTimeControl';
@@ -28,6 +28,7 @@ export default function ClippingControlsVideoJSAdapter(props) {
   const [duration, setDuration] = useState(null);
   const [isLive, setIsLive] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [playBackTime, setPlayBackTime] = useState(0);
   const [workingBounds, setWorkingBounds] = useState({
     start: 0,
     end: null
@@ -37,26 +38,30 @@ export default function ClippingControlsVideoJSAdapter(props) {
     end: null
   });
 
+  const playTimeBounds = useRef({
+    start: 0,
+    end: null
+  });
+
   useEffect(() => {
-    if (player()) {
+    player().on('loadedmetadata', () => {
+      const _duration = player().duration();
+      if (_duration === Infinity) {
+        setIsLive(true);
+      }
+      setDuration(player().duration());
+    });
 
-      player().on('loadedmetadata', () => {
-        const _duration = player().duration();
-        if (_duration === Infinity) {
-          setIsLive(true);
-        }
-        setDuration(player().duration());
-      });
+    player().on('timeupdate', () => {
+      const _currentTime = player().currentTime();
+      if (playTimeBounds.current.end && _currentTime >= playTimeBounds.current.end) {
+        player().pause();
+      }
+      setCurrentTime(_currentTime);
+    });
 
-      player().on('play', () => {
-        setDuration(player().duration());
-      });
+  }, []);
 
-      player().on('timeupdate', () => {
-        setCurrentTime(player().currentTime());
-      });
-    }
-  }, [player]);
 
   const onSetTime = (time) => {
     setCurrentTime(time);
@@ -64,19 +69,28 @@ export default function ClippingControlsVideoJSAdapter(props) {
   };
 
   const onStartHere = (time) => {
-    console.log(time);
+    onSetClipBounds([clipBounds.start + time, clipBounds.end]);
   };
 
   const onEndHere = (time) => {
-    console.log(time);
+    onSetClipBounds([clipBounds.start, clipBounds.start + time]);
   };
 
   const onSetWorkingBounds = (value) => {
-    setWorkingBounds({ start: value[0], end: value[1] });
+    const [start, end] = value;
+    onSetClipBounds(value);
+    setWorkingBounds({ start, end });
   };
 
   const onSetClipBounds = (value) => {
-    setClipBounds({ start: value[0], end: value[1] });
+    const [start, end] = value;
+    if (clipBounds.start !== start) {
+      onSetTime(start);
+    } else if (currentTime > end) {
+      onSetTime(clipBounds.end - clipBounds.start);
+    }
+    playTimeBounds.current = { start, end };
+    setClipBounds({ start, end });
   };
 
   return (
@@ -102,9 +116,9 @@ export default function ClippingControlsVideoJSAdapter(props) {
         <div className={props.classes?.control}>
           <PlayBackTimeControl
             disabled={isLive}
-            currentTime={currentTime}
-            max={isLive ? currentTime : duration}
-            onChange={onSetTime}
+            currentTime={clipBounds.start > 0 ? currentTime - clipBounds.start : currentTime}
+            max={isLive ? currentTime : (clipBounds.end ?? duration) - clipBounds.start}
+            onChange={(value) => onSetTime(clipBounds.start + value)}
             onStartHere={onStartHere}
             onEndHere={onEndHere}
             label="Playback Time"
@@ -115,7 +129,8 @@ export default function ClippingControlsVideoJSAdapter(props) {
             disabled={isLive}
             start={clipBounds.start}
             end={clipBounds.end ?? duration}
-            max={(workingBounds.end ?? duration) - workingBounds.start}
+            min={workingBounds.start}
+            max={workingBounds.end ?? duration}
             onChange={onSetClipBounds}
             label="Clip bounds"
           />

@@ -65,7 +65,7 @@ export const useSlider = makeStyles(() => ({
 }));
 
 export default function BoundsControl(props) {
-  const { start, end, max, onChange, label, disabled } = props;
+  const { start, end, max, min = 0, onChange, label, disabled } = props;
   const classes = useStyles();
   const sliderClasses = useSlider();
 
@@ -78,6 +78,7 @@ export default function BoundsControl(props) {
         disabled={disabled}
         value={[start, end]}
         step={1}
+        min={min}
         max={max}
         classes={sliderClasses}
         onChange={(e, value) => onChange(value)}

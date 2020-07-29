@@ -57,6 +57,7 @@ export default function BasicControls(props) {
     onSkipBack,
     onTogglePlay,
     isPlaying,
+    isLive,
     onSkipForward,
     onFullScreen,
     volume,
@@ -80,6 +81,7 @@ export default function BasicControls(props) {
             size="small"
             className={clsx(classes.fabButton, props.classes?.fabButton)}
             onClick={onSkipBack}
+            disabled={isLive}
           >
             <ReplayRounded />
           </Fab>
@@ -102,6 +104,7 @@ export default function BasicControls(props) {
             size="small"
             className={clsx(classes.fabButton, props.classes?.fabButton)}
             onClick={onSkipForward}
+            disabled={isLive}
           >
             <ForwardRounded />
           </Fab>

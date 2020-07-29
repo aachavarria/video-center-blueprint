@@ -37,7 +37,7 @@ const useStyles = makeStyles(() => ({
 }));
 
 export default function PlayBackTimeControl(props) {
-  const { currentTime, max, onChange, label, onStartHere, onEndHere, disabled } = props;
+  const { currentTime, max, min, onChange, label, onStartHere, onEndHere, disabled } = props;
   const classes = useStyles();
   const sliderClasses = useSlider();
 
@@ -48,6 +48,7 @@ export default function PlayBackTimeControl(props) {
       </Typography>
       <Slider
         value={currentTime}
+        min={min}
         max={max}
         classes={sliderClasses}
         onChange={(e, time) => disabled ? null : onChange(time)}
